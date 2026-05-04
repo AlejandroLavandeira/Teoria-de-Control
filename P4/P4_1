@@ -1,0 +1,51 @@
+% =========================================================
+% Validación de PIDs Discretos - Práctica 4 (Control Digital)
+% =========================================================
+clear; clc; close all;
+
+% 1. Parámetros del Controlador PID y Muestreo
+Kp = 15.0; 
+Ki = 2.5; 
+Kd = 0.8;
+dt = 0.01; % Periodo de muestreo (10 ms es razonable para un ESP32) [cite: 6]
+
+% Planta simulada genérica (Inestable, ej: péndulo simplificado 1/(s^2 - 1))
+s = tf('s');
+P_cont = 1 / (s^2 - 1); 
+P_disc = c2d(P_cont, dt, 'zoh'); % Planta discretizada
+
+% 2. PID en Tiempo Continuo (Ideal)
+C_cont = Kp + Ki/s + Kd*s;
+L_cont = feedback(C_cont * P_cont, 1); % Lazo cerrado continuo
+
+% 3. PID Discreto 1: Diferencias finitas / IIR (Ec. 4.7 y 4.8)
+z = tf('z', dt);
+% Aplicamos la formulación IIR directa del guion:
+C_disc_iir = Kp + Ki*dt/(z-1) + (Kd/dt)*(z-1)/z;
+L_disc_iir = feedback(C_disc_iir * P_disc, 1);
+
+% 4. PID Discreto 2: Con filtro pasa baja en la derivada (Ec. 4.10)
+N = 5; % Coeficiente empírico (suele estar entre 3 y 10) 
+Td = Kd/Kp; % Tiempo derivativo [cite: 27]
+% Implementación según la ecuación 4.10 del guion
+C_disc_filt = Kp + Ki*dt/(z-1) + (Kd*Td/(dt*N)) * (1/z) / (1/z + 1);
+L_disc_filt = feedback(C_disc_filt * P_disc, 1);
+
+% 5. Análisis Gráfico
+figure('Name', 'Análisis de Controladores PID', 'NumberTitle', 'off', 'Position', [100, 100, 900, 600]);
+
+% 5.1 Diagrama de Bode de los Controladores (Acción de Control)
+subplot(2,1,1);
+bode(C_cont, 'b', C_disc_iir, 'r--', C_disc_filt, 'g-.');
+grid on;
+title('Diagrama de Bode de los Controladores (C(s) vs C(z))');
+legend('PID Continuo', 'PID Discreto (IIR)', 'PID Discreto (Filtro PB)', 'Location', 'SouthWest');
+% Aquí notarás cómo el filtro pasa baja atenúa la ganancia en altas frecuencias.
+
+% 5.2 Respuesta al Escalón en Lazo Cerrado
+subplot(2,1,2);
+step(L_cont, 'b', L_disc_iir, 'r--', L_disc_filt, 'g-.', 5);
+grid on;
+title('Respuesta al Escalón en Lazo Cerrado');
+legend('Lazo Continuo', 'Lazo Discreto (IIR)', 'Lazo Discreto (Filtro PB)');
+xlabel('Tiempo (s)'); ylabel('Amplitud');
