@@ -1,0 +1,49 @@
+% --- Práctica 3: Validación del Paso 1 ---
+% Cálculo de Especificaciones y Polos Dominantes en Lazo Cerrado
+clear; clc; close all;
+
+% 1. Especificaciones de diseño dadas en la práctica
+Mp = 0.20; % Sobrepaso máximo del 20%
+ts = 2;    % Tiempo de asentamiento al 2% (2 segundos)
+
+% 2. Cálculo analítico del coeficiente de amortiguamiento (zeta)
+% Despejando de: Mp = exp(-zeta*pi / sqrt(1-zeta^2))
+zeta = sqrt( (log(Mp)^2) / (pi^2 + log(Mp)^2) );
+fprintf('Coeficiente de amortiguamiento (zeta): %.4f\n', zeta);
+
+% 3. Cálculo de la frecuencia natural (wn)
+% Despejando de la fórmula del tiempo de asentamiento: ts = 4 / (zeta * wn)
+wn = 4 / (zeta * ts);
+fprintf('Frecuencia natural (wn): %.4f rad/s\n', wn);
+
+% 4. Determinación de los polos dominantes deseados (sd)
+% Fórmula: sd = -zeta*wn +/- j*wn*sqrt(1-zeta^2)
+sigma = zeta * wn;
+wd = wn * sqrt(1 - zeta^2);
+
+sd1 = -sigma + 1i*wd;
+sd2 = -sigma - 1i*wd;
+
+fprintf('Polo dominante 1: %.4f + %.4fi\n', real(sd1), imag(sd1));
+fprintf('Polo dominante 2: %.4f - %.4fi\n', abs(real(sd2)), abs(imag(sd2)));
+
+% 5. Visualización rigurosa en el plano complejo s
+figure;
+plot(real(sd1), imag(sd1), 'rx', 'MarkerSize', 12, 'LineWidth', 2); hold on;
+plot(real(sd2), imag(sd2), 'rx', 'MarkerSize', 12, 'LineWidth', 2);
+grid on;
+title('Ubicación de los Polos Dominantes Deseados en Lazo Cerrado');
+xlabel('Eje Real (\sigma)');
+ylabel('Eje Imaginario (j\omega)');
+xline(0, 'k-', 'LineWidth', 1.5); 
+yline(0, 'k-', 'LineWidth', 1.5);
+axis([-5 1 -5 5]);
+
+num = 15;
+den = [1 10 27 18];
+sys = tf(num, den);
+figure;
+rlocus(sys);
+hold on;
+plot(-2, 3.904, 'rx', 'MarkerSize', 10, 'LineWidth', 2);
+title('Lugar de las Raíces del Sistema sin Compensar (Control P)');
