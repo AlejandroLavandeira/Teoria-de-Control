@@ -1,0 +1,35 @@
+% --- Cuestión 1: Representar el sistema como un objeto LTI ---
+% Definición de las matrices del sistema
+A = [0 1 0; 0 0 1; -50 -20 -10];
+B = [0; 0; 1];
+C = [30 0 0];
+D = 0;
+
+% Creación del objeto en el espacio de estados (sys)
+sys = ss(A, B, C, D);
+disp('Modelo en espacio de estados creado correctamente.');
+
+% --- Cuestión 2: Respuesta al escalón y evolución de variables ---
+% La función 'step' devuelve la salida (y), el vector de tiempo (t) 
+% y la evolución de los estados (x)
+[y, t, x] = step(sys);
+
+% Representación gráfica de los resultados
+figure('Name', 'Respuesta al Escalón - Sistema Continuo');
+
+% Subplot para la salida del sistema y(t)
+subplot(2,1,1);
+plot(t, y, 'b', 'LineWidth', 1.5);
+title('Respuesta de la salida y(t) ante entrada escalón unitario');
+xlabel('Tiempo (s)');
+ylabel('Amplitud');
+grid on;
+
+% Subplot para la evolución de las variables de estado x(t)
+subplot(2,1,2);
+plot(t, x(:,1), 'r', t, x(:,2), 'g', t, x(:,3), 'w', 'LineWidth', 1.5);
+title('Evolución de las variables de estado x(t)');
+xlabel('Tiempo (s)');
+ylabel('Amplitud');
+legend('x_1(t)', 'x_2(t)', 'x_3(t)', 'Location', 'best');
+grid on;
